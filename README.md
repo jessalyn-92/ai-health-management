@@ -13,9 +13,22 @@
 | Step 3 飲食記錄 | 三種記錄方式：拍營養標示、拍餐點照片、手動輸入；儲存前可確認與修正數值 | GPT-4o Vision |
 | Dashboard | 今日熱量進度、營養素圓餅圖、體重目標、運動菜單打卡、依肌群偏好重新生成菜單 | Chart.js |
 
+**AI 一週運動菜單：可打卡，並依肌群與強度偏好重新生成**
+
+![Workout plan](docs/screenshots/dashboard-workout.png)
+
+**影像辨識：營養標示（左）與餐點照片（右）**
+
 <p>
+  <img src="docs/screenshots/step3-ocr.png" width="49%">
+  <img src="docs/screenshots/step3-vision.png" width="49%">
+</p>
+
+**基本資料與健康計畫設定**
+
+<p>
+  <img src="docs/screenshots/step1.png" width="49%">
   <img src="docs/screenshots/step2.png" width="49%">
-  <img src="docs/screenshots/step3.png" width="49%">
 </p>
 
 ## 設計重點
