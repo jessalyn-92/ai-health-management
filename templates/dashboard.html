@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>儀表板 | AI 健康管理</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#f2efe9; --card:#faf8f5; --primary:#7c8b7e; --primary-d:#5a6b5c;
+      --accent:#a8978a; --text:#3d3d3d; --muted:#8a8a8a; --border:#ddd8d0;
+      --success:#7a9e87; --warning:#c9a96e; --danger:#b97070; --info:#7a9db5; --purple:#9b8eaf;
+    }
+    *{box-sizing:border-box;}
+    body{background:var(--bg);font-family:'Microsoft JhengHei','PingFang TC',sans-serif;color:var(--text);margin:0;}
+
+    .navbar{background:#6b7c6d;padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.1);position:sticky;top:0;z-index:100;}
+    .navbar-brand{color:#fff;font-weight:700;font-size:1.05rem;text-decoration:none;}
+    .nav-links{display:flex;gap:8px;align-items:center;}
+    .nav-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 14px;font-size:.82rem;text-decoration:none;transition:.2s;white-space:nowrap;}
+    .nav-btn:hover{background:rgba(255,255,255,.28);color:#fff;}
+    .nav-btn.active{background:rgba(255,255,255,.35);font-weight:600;}
+    .nav-user{font-size:.8rem;color:rgba(255,255,255,.7);padding:0 4px;}
+
+    .main{max-width:1100px;margin:0 auto;padding:24px 16px 80px;}
+    .section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;}
+    .card{background:var(--card);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);border:none;padding:22px;}
+
+    @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+    .skel{border-radius:10px;background:linear-gradient(90deg,#e8e4de 25%,#f2efe9 50%,#e8e4de 75%);background-size:600px 100%;animation:shimmer 1.4s infinite;}
+
+    /* Stat chips */
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    .stat-chip{background:var(--card);border-radius:14px;box-shadow:0 3px 10px rgba(0,0,0,.05);padding:16px 18px;border-left:4px solid var(--border);}
+    .stat-chip .s-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+    .stat-chip .s-val{font-size:1.45rem;font-weight:800;line-height:1.1;margin-top:2px;}
+    .stat-chip .s-unit{font-size:.75rem;color:var(--muted);margin-top:1px;}
+
+    /* Calorie bar */
+    .cal-section{background:var(--card);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);padding:20px 22px;margin-bottom:14px;}
+    .cal-bar-track{background:#e8e4de;border-radius:999px;height:12px;overflow:hidden;margin:8px 0 5px;}
+    .cal-bar-fill{height:100%;border-radius:999px;transition:width 1s ease;}
+
+    /* Charts row */
+    .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .macro-bar-track{background:#e8e4de;border-radius:99px;height:8px;overflow:hidden;}
+    .macro-bar-fill{height:100%;border-radius:99px;transition:width .9s ease;}
+    .macro-item{margin-bottom:14px;}
+
+    /* AI advice */
+    .ai-card{background:linear-gradient(135deg,#eef2ee,#faf8f5);border:1.5px solid #c8d4c9;border-radius:16px;padding:22px;margin-bottom:14px;}
+    .ai-tag{display:inline-block;background:rgba(124,139,126,.15);color:var(--primary-d);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:99px;margin-bottom:10px;}
+
+    /* ── Exercise section ── */
+    .ex-card{background:var(--card);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);padding:22px;margin-bottom:14px;}
+
+    /* Muscle selector */
+    .muscle-panel{background:#f5f2ec;border-radius:12px;padding:18px;margin-bottom:18px;}
+    .muscle-grid{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+    .muscle-chip{border:1.5px solid var(--border);border-radius:99px;padding:5px 14px;font-size:.8rem;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);transition:.2s;user-select:none;}
+    .muscle-chip:hover{border-color:var(--primary);color:var(--primary-d);}
+    .muscle-chip.selected{border-color:var(--primary);background:rgba(124,139,126,.15);color:var(--primary-d);}
+
+    .intensity-tabs{display:flex;gap:6px;margin:10px 0 14px;}
+    .int-tab{border:1.5px solid var(--border);border-radius:8px;padding:5px 14px;font-size:.8rem;font-weight:600;cursor:pointer;background:#fff;color:var(--muted);transition:.2s;}
+    .int-tab:hover{border-color:var(--primary);}
+    .int-tab.selected{border-color:var(--primary);background:rgba(124,139,126,.15);color:var(--primary-d);}
+
+    .btn-regen{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:9px 20px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px;}
+    .btn-regen:hover{background:var(--primary-d);}
+    .btn-regen:disabled{opacity:.6;cursor:not-allowed;}
+
+    /* Table */
+    .ex-table{width:100%;border-collapse:collapse;}
+    .ex-table th{font-size:.76rem;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);padding:8px 10px;white-space:nowrap;text-align:left;}
+    .ex-table td{font-size:.84rem;padding:10px 10px;border-bottom:1px solid #eee8e0;vertical-align:middle;}
+    .ex-table tbody tr:hover{background:rgba(124,139,126,.04);}
+    .ex-table tbody tr.done-row{opacity:.55;}
+
+    /* Badges */
+    .ex-badge{font-size:.7rem;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+    .badge-low{background:#e3ede5;color:#3a6645;}
+    .badge-mid{background:#f5ecd8;color:#7a5020;}
+    .badge-high{background:#f5e0e0;color:#7a2020;}
+    .badge-cardio{background:#dce8ef;color:#2d5f7a;}
+    .badge-strength{background:#ece4f0;color:#5c3d7a;}
+    .badge-rest{background:#eee8e0;color:#6b5a4a;}
+
+    /* Checkin */
+    .checkin-btn{background:none;border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:1rem;transition:.2s;display:flex;align-items:center;justify-content:center;}
+    .checkin-btn:hover{border-color:var(--success);background:rgba(122,158,135,.1);}
+    .checkin-btn.checked{background:var(--success);border-color:var(--success);color:#fff;}
+
+    /* Equipment tags */
+    .equip-tag{display:inline-block;background:#eee8e0;color:#5a4a3a;font-size:.68rem;padding:2px 7px;border-radius:6px;margin:1px;}
+
+    /* Tips box */
+    .tips-box{background:#f5f0e8;border-left:3px solid var(--warning);border-radius:0 10px 10px 0;padding:10px 14px;font-size:.82rem;color:#5a4020;margin-top:14px;display:none;}
+
+    /* Weekly progress */
+    .week-progress{display:flex;gap:6px;margin-bottom:16px;}
+    .day-dot{flex:1;text-align:center;}
+    .day-dot .dot{width:32px;height:32px;border-radius:50%;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:.85rem;border:2px solid var(--border);background:#fff;color:var(--muted);}
+    .day-dot .dot.done{background:var(--success);border-color:var(--success);color:#fff;}
+    .day-dot .dot.today{border-color:var(--primary);}
+    .day-dot .dlabel{font-size:.65rem;color:var(--muted);}
+
+    /* Meal logs */
+    .meal-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee8e0;}
+    .meal-item:last-child{border-bottom:none;}
+    .meal-source{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:99px;margin-right:8px;}
+    .src-ocr{background:#dce8ef;color:#2d5f7a;}
+    .src-vision{background:#ece4f0;color:#5c3d7a;}
+    .src-manual{background:#eee8e0;color:#5a4a3a;}
+    .meal-name{font-size:.88rem;font-weight:600;}
+    .meal-macros{font-size:.73rem;color:var(--muted);margin-top:2px;}
+    .meal-cal{font-size:1rem;font-weight:800;color:var(--primary-d);text-align:right;}
+
+    @media(max-width:640px){
+      .stat-row{grid-template-columns:1fr 1fr;}
+      .charts-row{grid-template-columns:1fr;}
+      .intensity-tabs{flex-wrap:wrap;}
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="/">🌿 AI 健康管理</a>
+  <div class="nav-links">
+    <span class="nav-user" id="nav-user"></span>
+    <a href="/step1" class="nav-btn">📋 建立檔案</a>
+    <a href="/step3" class="nav-btn">🍽️ 飲食記錄</a>
+    <a href="/dashboard" class="nav-btn active">📊 儀表板</a>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- Skeleton -->
+  <div id="skeleton">
+    <div class="stat-row mb-3"><div class="skel" style="height:80px"></div><div class="skel" style="height:80px"></div><div class="skel" style="height:80px"></div><div class="skel" style="height:80px"></div></div>
+    <div class="skel mb-3" style="height:60px"></div>
+    <div class="charts-row mb-3"><div class="skel" style="height:240px"></div><div class="skel" style="height:240px"></div></div>
+    <div class="skel mb-3" style="height:100px"></div>
+    <div class="skel mb-3" style="height:340px"></div>
+    <div class="skel" style="height:160px"></div>
+  </div>
+
+  <div id="dash" style="display:none">
+
+    <!-- Stat chips -->
+    <div class="stat-row">
+      <div class="stat-chip" style="border-left-color:var(--primary)">
+        <div class="s-label">目前體重</div>
+        <div class="s-val" id="s-weight" style="color:var(--primary-d)">—</div>
+        <div class="s-unit">公斤 (kg)</div>
+      </div>
+      <div class="stat-chip" style="border-left-color:var(--success)">
+        <div class="s-label">目標體重</div>
+        <div class="s-val" id="s-goal" style="color:var(--success)">—</div>
+        <div class="s-unit">公斤 (kg)</div>
+      </div>
+      <div class="stat-chip" style="border-left-color:var(--info)">
+        <div class="s-label">BMI 指數</div>
+        <div class="s-val" id="s-bmi">—</div>
+        <div class="s-unit" id="s-bmi-cat">—</div>
+      </div>
+      <div class="stat-chip" style="border-left-color:var(--warning)">
+        <div class="s-label">建議每日熱量</div>
+        <div class="s-val" id="s-tdee" style="color:var(--warning)">—</div>
+        <div class="s-unit">kcal / 日</div>
+      </div>
+    </div>
+
+    <!-- Calorie bar -->
+    <div class="cal-section mb-3">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700;font-size:.9rem">🔥 今日熱量攝取</div>
+        <div style="font-size:.82rem;color:var(--muted)"><span id="cal-cur">0</span> / <span id="cal-tgt">—</span> kcal &nbsp;<span id="cal-pct" style="font-weight:700;color:var(--primary-d)">0%</span></div>
+      </div>
+      <div class="cal-bar-track"><div class="cal-bar-fill" id="cal-fill" style="width:0%"></div></div>
+      <div style="font-size:.75rem;color:var(--muted)" id="cal-hint"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="section-label">體重目標進度</div>
+        <canvas id="chartWeight" style="max-height:185px"></canvas>
+        <div style="display:flex;justify-content:space-around;margin-top:14px">
+          <div style="text-align:center"><div style="font-size:.72rem;color:var(--muted)">目前體重</div><div style="font-size:1.1rem;font-weight:800;color:var(--primary-d)" id="w-cur">—</div></div>
+          <div style="text-align:center"><div style="font-size:.72rem;color:var(--muted)">目標體重</div><div style="font-size:1.1rem;font-weight:800;color:var(--success)" id="w-goal">—</div></div>
+          <div style="text-align:center"><div style="font-size:.72rem;color:var(--muted)">還差</div><div style="font-size:1.1rem;font-weight:800;color:var(--warning)" id="w-diff">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">今日三大營養素</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="flex:0 0 130px"><canvas id="chartMacro" style="max-height:150px"></canvas></div>
+          <div style="flex:1" id="macro-bars"></div>
+        </div>
+        <div style="text-align:center;margin-top:10px;font-size:.8rem;color:var(--muted)">建議攝取熱量：<strong style="color:var(--primary-d)" id="daily-cal-label">—</strong> kcal</div>
+      </div>
+    </div>
+
+    <!-- AI advice -->
+    <div class="ai-card" id="ai-section">
+      <span class="ai-tag">🤖 AI 專業分析</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--primary-d);margin-bottom:5px">🥗 飲食建議</div>
+          <div style="font-size:.83rem;color:#555;line-height:1.6" id="diet-advice">—</div>
+        </div>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--primary-d);margin-bottom:5px">🏃 運動策略</div>
+          <div style="font-size:.83rem;color:#555;line-height:1.6" id="ex-strategy">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Exercise section ══ -->
+    <div class="ex-card">
+
+      <!-- Header row -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div class="section-label mb-0">本週 AI 推薦運動菜單</div>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:3px">點擊 ✓ 打卡今日完成的訓練</div>
+        </div>
+        <button class="btn-regen" id="regen-btn" onclick="openRegenPanel()">
+          ✨ 客製化菜單
+        </button>
+      </div>
+
+      <!-- Weekly completion dots -->
+      <div class="week-progress" id="week-dots"></div>
+
+      <!-- Regen panel (hidden by default) -->
+      <div class="muscle-panel" id="regen-panel" style="display:none">
+        <div style="font-size:.88rem;font-weight:700;color:var(--primary-d);margin-bottom:8px">🎯 選擇想加強的肌群</div>
+        <div class="muscle-grid" id="muscle-grid">
+          <!-- filled by JS -->
+        </div>
+
+        <div style="font-size:.85rem;font-weight:700;color:var(--primary-d);margin:12px 0 4px">⚡ 訓練強度偏好</div>
+        <div class="intensity-tabs">
+          <div class="int-tab selected" data-int="輕鬆" onclick="selectIntensity(this)">😌 輕鬆</div>
+          <div class="int-tab" data-int="均衡" onclick="selectIntensity(this)">⚖️ 均衡</div>
+          <div class="int-tab" data-int="強烈" onclick="selectIntensity(this)">🔥 強烈</div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-regen" id="do-regen-btn" onclick="doRegen()">
+            <span id="regen-txt">🤖 重新生成菜單</span>
+            <span id="regen-spin" style="display:none"><span class="spinner-border spinner-border-sm"></span> 生成中…</span>
+          </button>
+          <button onclick="closeRegenPanel()" style="background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;">取消</button>
+        </div>
+      </div>
+
+      <!-- Tips box -->
+      <div class="tips-box" id="tips-box"></div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;margin-top:8px">
+        <table class="ex-table">
+          <thead>
+            <tr>
+              <th style="width:36px"></th>
+              <th>星期</th><th>類型</th><th>運動項目</th>
+              <th>組數</th><th>時間</th><th>距離</th><th>強度</th>
+              <th>主要肌群</th><th>器材</th>
+            </tr>
+          </thead>
+          <tbody id="ex-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Meal logs -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="section-label mb-0">今日飲食紀錄</div>
+        <a href="/step3" style="font-size:.8rem;color:var(--primary-d);text-decoration:none;font-weight:600;background:rgba(124,139,126,.12);padding:4px 12px;border-radius:8px">+ 新增</a>
+      </div>
+      <div id="meal-list"><div style="text-align:center;color:var(--muted);padding:24px 0;font-size:.88rem">尚無今日飲食紀錄</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────
+const BMI_COLOR = b=>b<18.5?'#7a9db5':b<24?'#7a9e87':b<27?'#c9a96e':'#b97070';
+const BMI_CAT   = b=>b<18.5?'過輕':b<24?'正常':b<27?'過重':'肥胖';
+const INT_CLS   = i=>i==='低'?'badge-low':i==='高'?'badge-high':'badge-mid';
+const TYPE_CLS  = t=>t&&t.includes('有氧')?'badge-cardio':t&&t.includes('肌力')||t&&t.includes('力量')?'badge-strength':'badge-rest';
+const SRC_CLS   = s=>s==='OCR 辨識'?'src-ocr':s==='AI 估算'?'src-vision':'src-manual';
+const DAYS      = ['週一','週二','週三','週四','週五','週六','週日'];
+const MUSCLES   = ['胸部','背部','肩膀','手臂 (二頭)','手臂 (三頭)','核心 / 腹肌','腿部 (股四頭)','腿部 (腿後)','臀部','全身'];
+
+let checkinMap  = {};   // day_label -> done
+let selectedMuscles  = [];
+let selectedIntensity = '輕鬆';
+let currentPlan = [];
+
+// ── Init muscle grid ──────────────────────────────────────────────────────
+document.getElementById('muscle-grid').innerHTML = MUSCLES.map(m=>
+  `<div class="muscle-chip" onclick="toggleMuscle(this,'${m}')">${m}</div>`
+).join('');
+
+function toggleMuscle(el, name) {
+  el.classList.toggle('selected');
+  if(el.classList.contains('selected')) selectedMuscles.push(name);
+  else selectedMuscles = selectedMuscles.filter(x=>x!==name);
+}
+function selectIntensity(el) {
+  document.querySelectorAll('.int-tab').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedIntensity = el.dataset.int;
+}
+function openRegenPanel()  { document.getElementById('regen-panel').style.display='block'; }
+function closeRegenPanel() { document.getElementById('regen-panel').style.display='none'; }
+
+// ── Regen ─────────────────────────────────────────────────────────────────
+async function doRegen() {
+  const btn = document.getElementById('do-regen-btn');
+  btn.disabled = true;
+  document.getElementById('regen-txt').style.display  = 'none';
+  document.getElementById('regen-spin').style.display = '';
+
+  try {
+    const res  = await fetch('/api/regenerate-plan', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ muscles: selectedMuscles, intensity: selectedIntensity })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    currentPlan = data.weekly_plan;
+    renderTable(currentPlan);
+    closeRegenPanel();
+    if(data.tips){
+      const tb = document.getElementById('tips-box');
+      tb.textContent = '💡 ' + data.tips;
+      tb.style.display = 'block';
+    }
+  } catch(e) {
+    alert('生成失敗：'+e.message);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('regen-txt').style.display  = '';
+    document.getElementById('regen-spin').style.display = 'none';
+  }
+}
+
+// ── Check-in ──────────────────────────────────────────────────────────────
+async function toggleCheckin(day, btn) {
+  const isDone = !btn.classList.contains('checked');
+  btn.classList.toggle('checked', isDone);
+  btn.textContent = isDone ? '✓' : '';
+  checkinMap[day] = isDone;
+  renderWeekDots();
+  await fetch('/api/checkin', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ day, done: isDone })
+  });
+}
+
+// ── Render table ──────────────────────────────────────────────────────────
+function renderTable(plan) {
+  if(!plan.length){
+    document.getElementById('ex-tbody').innerHTML =
+      '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:16px">請先完成 Step 2 生成計畫</td></tr>';
+    return;
+  }
+  document.getElementById('ex-tbody').innerHTML = plan.map(d=>{
+    const day     = d.day||'';
+    const done    = checkinMap[day];
+    const equipHtml = Array.isArray(d.equipment) && d.equipment.length
+      ? d.equipment.map(e=>`<span class="equip-tag">${e}</span>`).join(' ')
+      : '<span style="color:var(--muted);font-size:.78rem">無需器材</span>';
+    return `<tr class="${done?'done-row':''}">
+      <td>
+        <button class="checkin-btn ${done?'checked':''}"
+          onclick="toggleCheckin('${day}',this)"
+          title="${done?'取消打卡':'標記完成'}">${done?'✓':''}</button>
+      </td>
+      <td style="font-weight:700">${day}</td>
+      <td><span class="ex-badge ${TYPE_CLS(d.type||'')}">${d.type||'—'}</span></td>
+      <td style="font-weight:600">${d.item||d.exercise||'—'}</td>
+      <td style="color:var(--muted)">${d.sets||'—'}</td>
+      <td>${d.duration||'—'}</td>
+      <td style="color:var(--muted)">${d.distance||'—'}</td>
+      <td><span class="ex-badge ${INT_CLS(d.intensity||'')}">${d.intensity||'—'}</span></td>
+      <td style="font-size:.78rem;color:var(--primary-d)">${d.muscle_focus||'—'}</td>
+      <td>${equipHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Week dots ─────────────────────────────────────────────────────────────
+function renderWeekDots() {
+  const todayIdx = (new Date().getDay()+6)%7; // Mon=0
+  document.getElementById('week-dots').innerHTML = DAYS.map((d,i)=>{
+    const done    = checkinMap[d];
+    const isToday = i===todayIdx;
+    const total   = currentPlan.length;
+    const doneCount = Object.values(checkinMap).filter(Boolean).length;
+    return `<div class="day-dot">
+      <div class="dot ${done?'done':''} ${isToday&&!done?'today':''}" title="${d}">${done?'✓':d[1]}</div>
+      <div class="dlabel">${d}</div>
+    </div>`;
+  }).join('') +
+  `<div style="margin-left:auto;align-self:center;font-size:.8rem;color:var(--primary-d);font-weight:700;white-space:nowrap">
+    ${Object.values(checkinMap).filter(Boolean).length} / ${currentPlan.filter(p=>p.type!=='休息').length} 完成
+  </div>`;
+}
+
+// ── Main load ─────────────────────────────────────────────────────────────
+async function load() {
+  const [sum, meals, checkins] = await Promise.all([
+    fetch('/api/dashboard/summary').then(r=>r.json()),
+    fetch('/api/dashboard/meal-logs').then(r=>r.json()),
+    fetch('/api/checkins').then(r=>r.json()),
+  ]);
+
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('dash').style.display     = 'block';
+
+  // Nav
+  const g = sum.gender==='male'?'男':'女';
+  document.getElementById('nav-user').textContent = `👤 ${g}性 ${sum.age}歲`;
+
+  // Stats
+  document.getElementById('s-weight').textContent = sum.current_weight;
+  document.getElementById('s-goal').textContent   = sum.goal_weight;
+  const bmi = sum.bmi;
+  document.getElementById('s-bmi').textContent     = bmi;
+  document.getElementById('s-bmi').style.color     = BMI_COLOR(bmi);
+  document.getElementById('s-bmi-cat').textContent = BMI_CAT(bmi);
+  const tgt = sum.daily_calories || sum.tdee || 2000;
+  document.getElementById('s-tdee').textContent    = tgt;
+
+  // Calorie bar
+  const cal = Math.round(sum.total_calories);
+  const pct = Math.min(100, Math.round(cal/tgt*100));
+  document.getElementById('cal-cur').textContent  = cal;
+  document.getElementById('cal-tgt').textContent  = tgt;
+  document.getElementById('cal-pct').textContent  = pct+'%';
+  const fill = document.getElementById('cal-fill');
+  fill.style.width      = pct+'%';
+  fill.style.background = pct>100?'#b97070':pct>85?'#c9a96e':'#7a9e87';
+  document.getElementById('cal-hint').textContent = pct>=100
+    ? '⚠️ 已達今日建議熱量上限'
+    : `還可攝取 ${tgt-cal} kcal`;
+
+  // Weight chart
+  const cw=sum.current_weight, gw=sum.goal_weight;
+  document.getElementById('w-cur').textContent  = cw+' kg';
+  document.getElementById('w-goal').textContent = gw+' kg';
+  document.getElementById('w-diff').textContent = Math.abs((cw-gw).toFixed(1))+' kg';
+  new Chart(document.getElementById('chartWeight'),{
+    type:'bar',
+    data:{labels:['體重 (kg)'],datasets:[
+      {label:'目標體重',data:[gw],backgroundColor:'#7a9e87',borderRadius:8,stack:'s'},
+      {label:'距目標差距',data:[Math.max(0,+(cw-gw).toFixed(1))],backgroundColor:'#c9a96e',borderRadius:8,stack:'s'},
+    ]},
+    options:{indexAxis:'y',maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11},color:'#8a8a8a'}}},
+      scales:{x:{beginAtZero:true,grid:{color:'#eee8e0'},ticks:{color:'#8a8a8a'}},y:{grid:{display:false},ticks:{color:'#8a8a8a'}}}
+    }
+  });
+
+  // Macro doughnut
+  const pr=sum.total_protein||0, fa=sum.total_fat||0, ca=sum.total_carbs||0;
+  document.getElementById('daily-cal-label').textContent = tgt;
+  new Chart(document.getElementById('chartMacro'),{
+    type:'doughnut',
+    data:{labels:['蛋白質','脂肪','碳水'],datasets:[{data:[pr*4,fa*9,ca*4],backgroundColor:['#7a9db5','#b97070','#7a9e87'],hoverOffset:4,borderWidth:0}]},
+    options:{cutout:'68%',plugins:{legend:{display:false}},maintainAspectRatio:false}
+  });
+
+  // Macro bars
+  const macros=[
+    {label:'蛋白質',cur:pr,rec:sum.recommended_protein,color:'#7a9db5'},
+    {label:'脂肪',  cur:fa,rec:sum.recommended_fat,    color:'#b97070'},
+    {label:'碳水',  cur:ca,rec:sum.recommended_carbs,  color:'#7a9e87'},
+  ];
+  document.getElementById('macro-bars').innerHTML = macros.map(m=>{
+    const p=m.rec?Math.min(100,Math.round(m.cur/m.rec*100)):0;
+    return `<div class="macro-item">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px">
+        <span style="font-weight:600">${m.label}</span>
+        <span style="color:var(--muted)">${Math.round(m.cur)}g / ${m.rec||'?'}g</span>
+      </div>
+      <div class="macro-bar-track"><div class="macro-bar-fill" style="width:${p}%;background:${m.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // AI advice
+  if(sum.diet_advice||sum.exercise_strategy){
+    document.getElementById('diet-advice').textContent = sum.diet_advice||'—';
+    document.getElementById('ex-strategy').textContent = sum.exercise_strategy||'—';
+  } else document.getElementById('ai-section').style.display='none';
+
+  // Checkins
+  checkins.forEach(c=>{ if(c.done) checkinMap[c.day_label]=true; });
+
+  // Exercise plan
+  currentPlan = sum.weekly_plan||[];
+  renderTable(currentPlan);
+  renderWeekDots();
+
+  // Meal logs
+  document.getElementById('meal-list').innerHTML = !meals.length
+    ? '<div style="text-align:center;color:var(--muted);padding:24px 0;font-size:.88rem">尚無今日飲食紀錄 &nbsp;<a href="/step3" style="color:var(--primary-d);font-weight:600">去新增 →</a></div>'
+    : meals.map(m=>`
+      <div class="meal-item">
+        <div>
+          <div style="display:flex;align-items:center">
+            <span class="meal-source ${SRC_CLS(m.source)}">${m.source}</span>
+            <span class="meal-name">${m.food_name||'未知食物'}</span>
+          </div>
+          <div class="meal-macros">蛋白質 ${Math.round(m.protein_g)}g &nbsp;·&nbsp; 脂肪 ${Math.round(m.fat_g)}g &nbsp;·&nbsp; 碳水 ${Math.round(m.carbs_g)}g</div>
+        </div>
+        <div class="meal-cal">${Math.round(m.calories)} kcal</div>
+      </div>`).join('');
+}
+
+load().catch(console.error);
+</script>
+</body>
+</html>

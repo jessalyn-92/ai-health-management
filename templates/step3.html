@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Step 3 — 飲食記錄 | AI 健康管理</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#f2efe9; --card:#faf8f5; --primary:#7c8b7e; --primary-d:#5a6b5c;
+      --accent:#a8978a; --text:#3d3d3d; --muted:#8a8a8a; --border:#ddd8d0;
+      --success:#7a9e87; --info:#7a9db5; --purple:#9b8eaf;
+    }
+    body { background:var(--bg); font-family:'Microsoft JhengHei','PingFang TC',sans-serif; color:var(--text); margin:0; }
+    .navbar { background:#6b7c6d; padding:0 24px; height:58px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    .navbar-brand { color:#fff; font-weight:700; font-size:1.05rem; text-decoration:none; }
+    .nav-links { display:flex; gap:8px; align-items:center; }
+    .nav-btn { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:5px 14px; font-size:.82rem; text-decoration:none; transition:.2s; }
+    .nav-btn:hover { background:rgba(255,255,255,.28); color:#fff; }
+    .nav-btn.active { background:rgba(255,255,255,.35); font-weight:600; }
+
+    .step-bar { display:flex; align-items:center; justify-content:center; gap:0; padding:28px 0 8px; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .step-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; }
+    .step-circle.done    { background:var(--success); color:#fff; }
+    .step-circle.current { background:var(--primary); color:#fff; box-shadow:0 0 0 4px rgba(124,139,126,.25); }
+    .step-circle.pending { background:var(--border); color:var(--muted); }
+    .step-label { font-size:.7rem; color:var(--muted); }
+    .step-line  { width:48px; height:2px; background:var(--border); margin-bottom:18px; }
+    .step-line.done { background:var(--success); }
+
+    .wrap { max-width:680px; margin:0 auto; padding:16px 16px 60px; }
+    .page-title { font-size:1.15rem; font-weight:700; color:var(--primary-d); margin-bottom:4px; }
+    .page-sub   { font-size:.83rem; color:var(--muted); margin-bottom:20px; }
+
+    /* Mode tabs */
+    .mode-tabs { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px; }
+    .mode-tab  { border:2px solid var(--border); border-radius:13px; padding:14px 10px; text-align:center; cursor:pointer; background:#fff; transition:.2s; }
+    .mode-tab:hover  { border-color:var(--primary); }
+    .mode-tab.active { border-color:var(--primary); background:rgba(124,139,126,.08); }
+    .mode-tab .icon  { font-size:1.5rem; }
+    .mode-tab .name  { font-size:.8rem; font-weight:600; color:var(--text); margin-top:5px; }
+    .mode-tab .sub   { font-size:.7rem; color:var(--muted); margin-top:2px; }
+
+    .panel { background:var(--card); border-radius:16px; box-shadow:0 3px 14px rgba(0,0,0,.06); padding:26px; margin-bottom:14px; }
+    .panel-title { font-size:.95rem; font-weight:700; color:var(--primary-d); margin-bottom:4px; }
+    .panel-sub   { font-size:.78rem; color:var(--muted); margin-bottom:18px; }
+
+    /* Upload zone */
+    .upload-zone { border:2px dashed var(--border); border-radius:12px; padding:28px; text-align:center; cursor:pointer; transition:.2s; background:#f8f6f2; }
+    .upload-zone:hover { border-color:var(--primary); background:rgba(124,139,126,.05); }
+    .upload-zone.has-file { border-color:var(--success); background:rgba(122,158,135,.05); border-style:solid; }
+    .upload-zone img { max-height:180px; border-radius:10px; margin-top:12px; display:none; }
+
+    .form-label { font-size:.83rem; font-weight:600; color:var(--text); margin-bottom:5px; }
+    .form-control { border:1.5px solid var(--border); border-radius:10px; padding:9px 13px; font-size:.9rem; background:#fff; transition:border-color .2s; }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,139,126,.15); outline:none; }
+
+    .btn-run { background:var(--primary); color:#fff; border:none; border-radius:10px; padding:10px 20px; font-size:.88rem; font-weight:600; cursor:pointer; transition:.2s; width:100%; margin-top:14px; }
+    .btn-run:hover { background:var(--primary-d); }
+
+    /* Result */
+    .result-panel { background:linear-gradient(135deg,#f5f2ec,#fff); border:1.5px solid #d8d0c5; border-radius:16px; padding:24px; margin-bottom:14px; }
+    .result-title { font-size:.88rem; font-weight:700; color:var(--primary-d); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+    .source-badge { font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:99px; }
+    .badge-ocr    { background:#dce8ef; color:#3d6b80; }
+    .badge-vision { background:#e8e4f0; color:#5c4d7a; }
+    .badge-manual { background:#e8ece8; color:#3d5c3f; }
+
+    .num-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:16px; }
+    .num-cell label { font-size:.72rem; font-weight:600; color:var(--muted); display:block; margin-bottom:3px; }
+    .num-cell input { border:1.5px solid var(--border); border-radius:8px; padding:7px 10px; font-size:.9rem; font-weight:700; color:var(--text); background:#fff; width:100%; }
+    .num-cell input:focus { border-color:var(--primary); outline:none; }
+
+    .conf-bar-wrap { background:#e8e4de; border-radius:99px; height:6px; overflow:hidden; }
+    .conf-bar      { height:100%; border-radius:99px; transition:width .6s; }
+
+    .btn-save   { background:var(--success); color:#fff; border:none; border-radius:10px; padding:11px 28px; font-size:.9rem; font-weight:600; cursor:pointer; transition:.2s; }
+    .btn-save:hover { background:#5e8a6d; }
+    .btn-cancel { background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:10px; padding:10px 20px; font-size:.88rem; cursor:pointer; }
+
+    .alert-warn { background:#fdf6ec; border:1.5px solid #e8c98a; border-radius:10px; padding:10px 14px; font-size:.8rem; color:#7a5c1e; margin-bottom:12px; }
+    .alert-success { background:#edf7f1; border:1.5px solid #8ec9a4; border-radius:10px; padding:10px 14px; font-size:.85rem; color:#2e6b45; margin-bottom:0; margin-top:12px; }
+
+    .goto-dash { display:block; text-align:center; margin-top:20px; }
+    .btn-dash  { background:transparent; color:var(--primary-d); border:2px solid var(--primary); border-radius:11px; padding:10px 32px; font-size:.9rem; font-weight:600; text-decoration:none; transition:.2s; }
+    .btn-dash:hover { background:var(--primary); color:#fff; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="/">🌿 AI 健康管理</a>
+  <div class="nav-links">
+    <a href="/step1" class="nav-btn">📋 建立檔案</a>
+    <a href="/step3" class="nav-btn active">🍽️ 飲食記錄</a>
+    <a href="/dashboard" class="nav-btn">📊 儀表板</a>
+  </div>
+</nav>
+
+<div class="container py-3">
+  <div class="step-bar">
+    <div class="step-item"><div class="step-circle done">✓</div><div class="step-label">基本資料</div></div>
+    <div class="step-line done"></div>
+    <div class="step-item"><div class="step-circle done">✓</div><div class="step-label">健康計畫</div></div>
+    <div class="step-line done"></div>
+    <div class="step-item"><div class="step-circle current">3</div><div class="step-label">飲食記錄</div></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-circle pending">4</div><div class="step-label">儀表板</div></div>
+  </div>
+
+  <div class="wrap">
+    <div class="page-title">Step 3 — 智能飲食熱量記錄</div>
+    <div class="page-sub">選擇最方便的方式記錄您的飲食</div>
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <div class="mode-tab active" id="tab-ocr" onclick="switchMode('ocr')">
+        <div class="icon">📋</div>
+        <div class="name">OCR 掃描</div>
+        <div class="sub">食品熱量標示</div>
+      </div>
+      <div class="mode-tab" id="tab-vision" onclick="switchMode('vision')">
+        <div class="icon">🤖</div>
+        <div class="name">AI 拍照估算</div>
+        <div class="sub">外食 / 自製</div>
+      </div>
+      <div class="mode-tab" id="tab-manual" onclick="switchMode('manual')">
+        <div class="icon">✏️</div>
+        <div class="name">手動輸入</div>
+        <div class="sub">直接填寫</div>
+      </div>
+    </div>
+
+    <!-- OCR panel -->
+    <div class="panel" id="panel-ocr">
+      <div class="panel-title">📋 OCR 掃描食品熱量表</div>
+      <div class="panel-sub">拍攝包裝背面的「營養成分標示」，GPT-4o Vision 自動辨識數值，比傳統 OCR 更準確</div>
+      <div class="upload-zone" id="zone-ocr" onclick="document.getElementById('file-ocr').click()"
+           ondragover="event.preventDefault();this.classList.add('has-file')"
+           ondrop="handleDrop(event,'ocr')">
+        <div style="font-size:2rem">📷</div>
+        <div style="font-weight:600;margin-top:6px">點擊上傳或拖放圖片</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:3px">支援 JPG / PNG / WEBP</div>
+        <img id="prev-ocr" alt="preview">
+      </div>
+      <input type="file" id="file-ocr" accept="image/*" capture="environment" class="d-none" onchange="onFile('ocr')">
+      <button class="btn-run" onclick="runOCR()">
+        <span id="ocr-txt">🔍 開始辨識</span>
+        <span id="ocr-spin" style="display:none"><span class="spinner-border spinner-border-sm me-1"></span>AI 辨識中…</span>
+      </button>
+    </div>
+
+    <!-- Vision panel -->
+    <div class="panel d-none" id="panel-vision">
+      <div class="panel-title">🤖 AI 拍照估算</div>
+      <div class="panel-sub">直接拍食物照片，GPT-4o 分析估算熱量，照片越清晰越準確</div>
+      <div class="upload-zone" id="zone-vision" onclick="document.getElementById('file-vision').click()"
+           ondragover="event.preventDefault();this.classList.add('has-file')"
+           ondrop="handleDrop(event,'vision')">
+        <div style="font-size:2rem">🍱</div>
+        <div style="font-weight:600;margin-top:6px">點擊上傳食物照片</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:3px">建議正面拍攝，光線充足</div>
+        <img id="prev-vision" alt="preview">
+      </div>
+      <input type="file" id="file-vision" accept="image/*" capture="environment" class="d-none" onchange="onFile('vision')">
+      <button class="btn-run" onclick="runVision()">
+        <span id="vision-txt">🤖 AI 估算</span>
+        <span id="vision-spin" style="display:none"><span class="spinner-border spinner-border-sm me-1"></span>分析中…</span>
+      </button>
+    </div>
+
+    <!-- Manual panel -->
+    <div class="panel d-none" id="panel-manual">
+      <div class="panel-title">✏️ 手動輸入</div>
+      <div class="panel-sub">直接填寫食物名稱與營養數值</div>
+      <div class="mb-3">
+        <label class="form-label">食物名稱</label>
+        <input type="text" class="form-control" id="m-name" placeholder="例：雞胸肉便當">
+      </div>
+      <div class="num-grid">
+        <div class="num-cell"><label>熱量 kcal</label><input type="number" id="m-cal" min="0" placeholder="0"></div>
+        <div class="num-cell"><label>蛋白質 g</label><input type="number" id="m-protein" min="0" placeholder="0"></div>
+        <div class="num-cell"><label>脂肪 g</label><input type="number" id="m-fat" min="0" placeholder="0"></div>
+        <div class="num-cell"><label>碳水 g</label><input type="number" id="m-carbs" min="0" placeholder="0"></div>
+      </div>
+      <button class="btn-run" onclick="fillResult('手動輸入',{name:document.getElementById('m-name').value,calories:+document.getElementById('m-cal').value||0,protein:+document.getElementById('m-protein').value||0,fat:+document.getElementById('m-fat').value||0,carbs:+document.getElementById('m-carbs').value||0})">填入確認區域</button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel d-none" id="result-section">
+      <div class="result-title">
+        辨識結果確認
+        <span id="r-badge" class="source-badge">來源</span>
+      </div>
+
+      <div id="conf-section" class="d-none mb-3">
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px">
+          <span style="color:var(--muted)">AI 信心度</span>
+          <span id="conf-txt" style="font-weight:600;color:var(--primary-d)">—</span>
+        </div>
+        <div class="conf-bar-wrap"><div class="conf-bar" id="conf-bar" style="width:0%"></div></div>
+        <div id="low-conf" class="alert-warn mt-2 d-none">⚠️ 信心度偏低，請仔細確認或修正以下數值後再儲存</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">食物名稱</label>
+        <input type="text" class="form-control" id="r-name">
+      </div>
+      <div class="num-grid mb-3">
+        <div class="num-cell"><label>熱量 kcal</label><input type="number" id="r-cal"></div>
+        <div class="num-cell"><label>蛋白質 g</label><input type="number" id="r-protein"></div>
+        <div class="num-cell"><label>脂肪 g</label><input type="number" id="r-fat"></div>
+        <div class="num-cell"><label>碳水 g</label><input type="number" id="r-carbs"></div>
+      </div>
+      <div id="serving-row" style="font-size:.78rem;color:var(--muted);margin-bottom:14px;display:none"></div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn-save" onclick="saveMeal()">✅ 確認儲存</button>
+        <button class="btn-cancel" onclick="document.getElementById('result-section').classList.add('d-none')">取消</button>
+      </div>
+      <div id="save-ok" class="alert-success d-none">
+        ✅ 飲食記錄成功！&nbsp;<a href="/dashboard" style="color:#2e6b45;font-weight:600">前往儀表板查看 →</a>
+      </div>
+    </div>
+
+    <a href="/dashboard" class="goto-dash"><span class="btn-dash">📊 前往儀表板</span></a>
+  </div>
+</div>
+
+<script>
+let currentSource = '';
+
+function switchMode(m) {
+  ['ocr','vision','manual'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active', x===m);
+    document.getElementById('panel-'+x).classList.toggle('d-none', x!==m);
+  });
+}
+
+function onFile(mode) {
+  const f = document.getElementById('file-'+mode).files[0];
+  if(!f) return;
+  document.getElementById('zone-'+mode).classList.add('has-file');
+  const img = document.getElementById('prev-'+mode);
+  img.src = URL.createObjectURL(f);
+  img.style.display = 'block';
+}
+
+function handleDrop(e, mode) {
+  e.preventDefault();
+  const dt = new DataTransfer();
+  dt.items.add(e.dataTransfer.files[0]);
+  document.getElementById('file-'+mode).files = dt.files;
+  onFile(mode);
+}
+
+function setLoading(mode, on) {
+  document.getElementById(mode+'-txt').style.display  = on?'none':'';
+  document.getElementById(mode+'-spin').style.display = on?'':'none';
+}
+
+async function runOCR() {
+  const f = document.getElementById('file-ocr').files[0];
+  if(!f){ alert('請先選擇圖片'); return; }
+  setLoading('ocr', true);
+  const fd = new FormData(); fd.append('image',f);
+  try {
+    const d = await fetch('/api/ocr',{method:'POST',body:fd}).then(r=>r.json());
+    if(d.error) throw new Error(d.error);
+    fillResult('OCR 辨識',{name:d.food_name||'OCR 辨識食品',calories:d.calories||0,protein:d.protein||0,fat:d.fat||0,carbs:d.carbs||0,serving:d.serving_size||''});
+  } catch(e){ alert('辨識失敗：'+e.message); }
+  finally{ setLoading('ocr',false); }
+}
+
+async function runVision() {
+  const f = document.getElementById('file-vision').files[0];
+  if(!f){ alert('請先選擇圖片'); return; }
+  setLoading('vision', true);
+  const fd = new FormData(); fd.append('image',f);
+  try {
+    const d = await fetch('/api/vision',{method:'POST',body:fd}).then(r=>r.json());
+    if(d.error) throw new Error(d.error);
+    fillResult('AI 估算',{name:d.food_name||'',calories:d.calories||0,protein:d.protein||0,fat:d.fat||0,carbs:d.carbs||0}, d.confidence||1);
+  } catch(e){ alert('估算失敗：'+e.message); }
+  finally{ setLoading('vision',false); }
+}
+
+function fillResult(source, d, conf=null) {
+  currentSource = source;
+  document.getElementById('r-name').value    = d.name;
+  document.getElementById('r-cal').value     = d.calories;
+  document.getElementById('r-protein').value = d.protein;
+  document.getElementById('r-fat').value     = d.fat;
+  document.getElementById('r-carbs').value   = d.carbs;
+
+  const badge = document.getElementById('r-badge');
+  const cls   = source==='OCR 辨識'?'badge-ocr':source==='AI 估算'?'badge-vision':'badge-manual';
+  badge.className = 'source-badge '+cls;
+  badge.textContent = source;
+
+  const sr = document.getElementById('serving-row');
+  if(d.serving){ sr.textContent='📦 每份份量：'+d.serving; sr.style.display=''; }
+  else sr.style.display='none';
+
+  const cs = document.getElementById('conf-section');
+  if(conf!==null && source==='AI 估算'){
+    cs.classList.remove('d-none');
+    const pct = Math.round(conf*100);
+    document.getElementById('conf-txt').textContent = pct+'%';
+    const bar = document.getElementById('conf-bar');
+    bar.style.width = pct+'%';
+    bar.style.background = pct<60?'#b97070':pct<80?'#c9a96e':'#7a9e87';
+    document.getElementById('low-conf').classList.toggle('d-none', conf>=0.6);
+  } else cs.classList.add('d-none');
+
+  document.getElementById('save-ok').classList.add('d-none');
+  document.getElementById('result-section').classList.remove('d-none');
+  document.getElementById('result-section').scrollIntoView({behavior:'smooth'});
+}
+
+async function saveMeal() {
+  const payload = {
+    food_name: document.getElementById('r-name').value,
+    calories:  +document.getElementById('r-cal').value||0,
+    protein:   +document.getElementById('r-protein').value||0,
+    fat:       +document.getElementById('r-fat').value||0,
+    carbs:     +document.getElementById('r-carbs').value||0,
+    source:    currentSource,
+  };
+  const d = await fetch('/api/meal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+  if(d.status==='ok') document.getElementById('save-ok').classList.remove('d-none');
+}
+</script>
+</body>
+</html>

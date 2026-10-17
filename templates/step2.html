@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Step 2 — AI 健康計畫 | AI 健康管理</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #f2efe9;
+      --card:     #faf8f5;
+      --primary:  #7c8b7e;
+      --primary-d:#5a6b5c;
+      --accent:   #a8978a;
+      --text:     #3d3d3d;
+      --muted:    #8a8a8a;
+      --border:   #ddd8d0;
+      --success:  #7a9e87;
+    }
+    body { background:var(--bg); font-family:'Microsoft JhengHei','PingFang TC',sans-serif; color:var(--text); margin:0; }
+    .navbar { background:#6b7c6d; padding:0 24px; height:58px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    .navbar-brand { color:#fff; font-weight:700; font-size:1.05rem; text-decoration:none; }
+    .nav-links { display:flex; gap:8px; align-items:center; }
+    .nav-btn { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:5px 14px; font-size:.82rem; text-decoration:none; transition:.2s; }
+    .nav-btn:hover { background:rgba(255,255,255,.28); color:#fff; }
+    .nav-btn.active { background:rgba(255,255,255,.35); font-weight:600; }
+
+    .step-bar { display:flex; align-items:center; justify-content:center; gap:0; padding:28px 0 8px; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .step-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; }
+    .step-circle.done    { background:var(--success); color:#fff; }
+    .step-circle.current { background:var(--primary); color:#fff; box-shadow:0 0 0 4px rgba(124,139,126,.25); }
+    .step-circle.pending { background:var(--border); color:var(--muted); }
+    .step-label { font-size:.7rem; color:var(--muted); }
+    .step-line  { width:48px; height:2px; background:var(--border); margin-bottom:18px; }
+    .step-line.done { background:var(--success); }
+
+    .main-card { background:var(--card); border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,.07); padding:36px; max-width:600px; margin:0 auto; }
+    .card-title { font-size:1.2rem; font-weight:700; color:var(--primary-d); margin-bottom:4px; }
+    .card-sub   { font-size:.85rem; color:var(--muted); margin-bottom:24px; }
+    .form-label { font-size:.83rem; font-weight:600; color:var(--text); margin-bottom:5px; }
+    .form-control { border:1.5px solid var(--border); border-radius:10px; padding:9px 13px; font-size:.9rem; background:#fff; transition:border-color .2s; }
+    .form-control:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,139,126,.15); outline:none; }
+    .input-group-text { background:#f5f3ef; border:1.5px solid var(--border); color:var(--muted); font-size:.85rem; border-radius:0 10px 10px 0; }
+    .input-group .form-control { border-radius:10px 0 0 10px; }
+
+    /* BMI info chip */
+    .bmi-chip { background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+    .bmi-chip .num { font-size:1.6rem; font-weight:800; }
+    .bmi-chip .label { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .bmi-chip .cat   { font-size:.9rem; font-weight:600; }
+
+    /* Activity cards */
+    .activity-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .activity-card input { display:none; }
+    .activity-card label {
+      display:block; border:2px solid var(--border); border-radius:13px; padding:14px 16px;
+      cursor:pointer; transition:.2s; background:#fff;
+    }
+    .activity-card label:hover { border-color:var(--primary); background:rgba(124,139,126,.05); }
+    .activity-card input:checked + label { border-color:var(--primary); background:rgba(124,139,126,.1); }
+    .act-icon  { font-size:1.6rem; margin-bottom:6px; }
+    .act-name  { font-size:.88rem; font-weight:700; color:var(--text); }
+    .act-multi { font-size:.72rem; color:var(--primary-d); font-weight:600; background:rgba(124,139,126,.15); display:inline-block; padding:1px 7px; border-radius:99px; margin:3px 0; }
+    .act-desc  { font-size:.75rem; color:var(--muted); line-height:1.4; margin-top:4px; }
+    .act-examples { font-size:.73rem; color:var(--accent); margin-top:4px; }
+
+    .btn-primary-custom { background:var(--primary); color:#fff; border:none; border-radius:11px; padding:12px; font-size:.95rem; font-weight:600; width:100%; cursor:pointer; transition:.2s; }
+    .btn-primary-custom:hover { background:var(--primary-d); transform:translateY(-1px); box-shadow:0 4px 12px rgba(90,107,92,.3); }
+    .btn-primary-custom:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    .loading-box { display:none; text-align:center; padding:20px; }
+    .spinner { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="/">🌿 AI 健康管理</a>
+  <div class="nav-links">
+    <a href="/step1" class="nav-btn active">📋 建立檔案</a>
+    <a href="/dashboard" class="nav-btn">📊 儀表板</a>
+  </div>
+</nav>
+
+<div class="container py-3">
+  <div class="step-bar">
+    <div class="step-item"><div class="step-circle done">✓</div><div class="step-label">基本資料</div></div>
+    <div class="step-line done"></div>
+    <div class="step-item"><div class="step-circle current">2</div><div class="step-label">健康計畫</div></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-circle pending">3</div><div class="step-label">飲食記錄</div></div>
+    <div class="step-line"></div>
+    <div class="step-item"><div class="step-circle pending">4</div><div class="step-label">儀表板</div></div>
+  </div>
+
+  <div class="main-card mt-3">
+    <div class="card-title">Step 2 — AI 個人健康計畫生成</div>
+    <div class="card-sub">設定目標與活動量，AI 將計算您的 TDEE 並生成一週運動菜單</div>
+
+    <!-- BMI chip -->
+    <div class="bmi-chip">
+      <div style="font-size:2rem">
+        {% if bmi < 18.5 %}🔵{% elif bmi < 24 %}✅{% elif bmi < 27 %}🟡{% else %}🔴{% endif %}
+      </div>
+      <div>
+        <div class="label">您的 BMI</div>
+        <div class="num" style="color:{{ bmi_color }}">{{ bmi }}</div>
+        <div class="cat" style="color:{{ bmi_color }}">{{ bmi_category }}</div>
+      </div>
+      <div style="margin-left:auto;font-size:.8rem;color:var(--muted);max-width:200px;line-height:1.5">
+        {% if bmi < 18.5 %}建議補充足夠熱量，以增重為目標
+        {% elif bmi < 24 %}體重理想，建議維持現況並適度運動
+        {% elif bmi < 27 %}建議適度減重，以有氧運動搭配飲食控制
+        {% else %}建議從低衝擊運動開始，循序漸進減重{% endif %}
+      </div>
+    </div>
+
+    <form method="post" id="plan-form">
+      <!-- Goal weight -->
+      <div class="mb-4">
+        <label class="form-label" for="goal_weight">目標體重</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="goal_weight" name="goal_weight" min="30" max="200" step="0.1" value="60" required>
+          <span class="input-group-text">kg</span>
+        </div>
+      </div>
+
+      <!-- Activity level -->
+      <div class="mb-4">
+        <div class="form-label mb-3">日常活動量 <span style="font-size:.75rem;color:var(--muted);font-weight:400">— 選擇最符合您日常生活的描述</span></div>
+        <div class="activity-grid">
+
+          <div class="activity-card">
+            <input type="radio" name="activity_level" id="sedentary" value="sedentary">
+            <label for="sedentary">
+              <div class="act-icon">🪑</div>
+              <div class="act-name">久坐不動</div>
+              <div><span class="act-multi">熱量係數 ×1.2</span></div>
+              <div class="act-desc">幾乎沒有運動習慣，大部分時間坐著工作或休息</div>
+              <div class="act-examples">📌 辦公室白領、長時間看電視、WFH 少走動</div>
+            </label>
+          </div>
+
+          <div class="activity-card">
+            <input type="radio" name="activity_level" id="light" value="light">
+            <label for="light">
+              <div class="act-icon">🚶</div>
+              <div class="act-name">輕度活動</div>
+              <div><span class="act-multi">熱量係數 ×1.375</span></div>
+              <div class="act-desc">每週有 1–3 天會從事輕鬆的運動或步行</div>
+              <div class="act-examples">📌 散步 30 分、騎腳踏車、輕度瑜珈、家事</div>
+            </label>
+          </div>
+
+          <div class="activity-card">
+            <input type="radio" name="activity_level" id="moderate" value="moderate" checked>
+            <label for="moderate">
+              <div class="act-icon">🏃</div>
+              <div class="act-name">中度活動</div>
+              <div><span class="act-multi">熱量係數 ×1.55</span></div>
+              <div class="act-desc">每週 3–5 天進行中等強度的有氧或重訓</div>
+              <div class="act-examples">📌 慢跑、游泳、有氧課程、重訓、球類運動</div>
+            </label>
+          </div>
+
+          <div class="activity-card">
+            <input type="radio" name="activity_level" id="high" value="high">
+            <label for="high">
+              <div class="act-icon">🏋️</div>
+              <div class="act-name">高度活動</div>
+              <div><span class="act-multi">熱量係數 ×1.725</span></div>
+              <div class="act-desc">每天都有高強度訓練，或從事勞力密集工作</div>
+              <div class="act-examples">📌 競技運動員、體力勞動、每日 HIIT 訓練</div>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary-custom" id="submit-btn">🤖 生成 AI 健康計畫 →</button>
+    </form>
+
+    <div class="loading-box" id="loading-box">
+      <div class="spinner"></div>
+      <div style="font-weight:600;color:var(--primary-d)">AI 教練正在分析您的數據…</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:6px">計算 BMR、TDEE、規劃個人化運動菜單</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('plan-form').addEventListener('submit', function() {
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('loading-box').style.display = 'block';
+});
+</script>
+</body>
+</html>

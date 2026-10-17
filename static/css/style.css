@@ -1,0 +1,99 @@
+/* AI 健康管理系統 — Custom Styles */
+
+body {
+  font-family: 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton-card {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+  min-height: 100px;
+}
+
+/* Step badges */
+.step-badges .badge {
+  font-size: 0.75rem;
+  padding: 0.35em 0.75em;
+}
+
+/* Mode tabs */
+.nav-pills .nav-link {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  margin-right: 0.5rem;
+}
+
+.nav-pills .nav-link.active {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* Card improvements */
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.card-body {
+  border-radius: 12px;
+}
+
+/* Activity selector buttons */
+.btn-check:checked + .btn-outline-secondary {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* Progress bars */
+.progress {
+  border-radius: 100px;
+}
+
+/* Navbar */
+.navbar-brand {
+  letter-spacing: -0.3px;
+}
+
+/* Table */
+.table th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+/* Input groups */
+.input-group-text {
+  background: #f8f9fa;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* BMI alert transitions */
+.alert {
+  transition: background-color 0.3s, border-color 0.3s;
+  border-radius: 10px;
+}
+
+/* Badge for low-confidence */
+.bg-purple {
+  background-color: #6f42c1 !important;
+}
+
+/* Doughnut center label (optional enhancement) */
+.chart-container {
+  position: relative;
+}

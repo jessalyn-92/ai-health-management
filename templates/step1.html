@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Step 1 — 基本資料 | AI 健康管理</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #f2efe9;
+      --card:     #faf8f5;
+      --primary:  #7c8b7e;
+      --primary-d:#5a6b5c;
+      --accent:   #a8978a;
+      --accent2:  #b5a89a;
+      --text:     #3d3d3d;
+      --muted:    #8a8a8a;
+      --border:   #ddd8d0;
+      --success:  #7a9e87;
+      --warning:  #c9a96e;
+      --danger:   #b97070;
+      --info:     #7a9db5;
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg); font-family: 'Microsoft JhengHei','PingFang TC',sans-serif; color: var(--text); margin:0; }
+
+    /* ── Navbar ── */
+    .navbar { background: #6b7c6d; padding: 0 24px; height: 58px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    .navbar-brand { color:#fff; font-weight:700; font-size:1.05rem; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .nav-links { display:flex; gap:8px; align-items:center; }
+    .nav-btn { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:8px; padding:5px 14px; font-size:.82rem; text-decoration:none; transition:.2s; white-space:nowrap; }
+    .nav-btn:hover { background:rgba(255,255,255,.28); color:#fff; }
+    .nav-btn.active { background:rgba(255,255,255,.35); font-weight:600; }
+
+    /* ── Step indicator ── */
+    .step-bar { display:flex; align-items:center; justify-content:center; gap:0; padding:28px 0 8px; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .step-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; }
+    .step-circle.done    { background:var(--success); color:#fff; }
+    .step-circle.current { background:var(--primary); color:#fff; box-shadow:0 0 0 4px rgba(124,139,126,.25); }
+    .step-circle.pending { background:var(--border); color:var(--muted); }
+    .step-label { font-size:.7rem; color:var(--muted); }
+    .step-line { width:48px; height:2px; background:var(--border); margin-bottom:18px; }
+    .step-line.done { background:var(--success); }
+
+    /* ── Card ── */
+    .main-card { background:var(--card); border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,.07); padding:36px; max-width:520px; margin:0 auto; }
+    .card-title { font-size:1.2rem; font-weight:700; color:var(--primary-d); margin-bottom:4px; }
+    .card-sub   { font-size:.85rem; color:var(--muted); margin-bottom:28px; }
+
+    /* ── Form ── */
+    .form-label { font-size:.83rem; font-weight:600; color:var(--text); margin-bottom:5px; }
+    .form-control, .form-select {
+      border:1.5px solid var(--border); border-radius:10px; padding:9px 13px;
+      font-size:.9rem; background:#fff; color:var(--text);
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,139,126,.15); outline:none;
+    }
+    .input-group-text { background:#f5f3ef; border:1.5px solid var(--border); color:var(--muted); border-radius:0 10px 10px 0; font-size:.85rem; }
+    .input-group .form-control { border-radius:10px 0 0 10px; }
+
+    .radio-group { display:flex; gap:10px; }
+    .radio-pill  { flex:1; }
+    .radio-pill input { display:none; }
+    .radio-pill label { display:block; text-align:center; padding:9px; border:1.5px solid var(--border);
+                        border-radius:10px; cursor:pointer; font-size:.88rem; font-weight:500;
+                        color:var(--muted); transition:.2s; background:#fff; }
+    .radio-pill input:checked + label { border-color:var(--primary); background:rgba(124,139,126,.12); color:var(--primary-d); font-weight:600; }
+
+    /* ── BMI card ── */
+    .bmi-display { border-radius:12px; padding:16px 20px; border:1.5px solid var(--border); background:#fff; margin-bottom:20px; }
+    .bmi-value { font-size:2rem; font-weight:800; line-height:1; }
+    .bmi-scale { display:flex; height:7px; border-radius:999px; overflow:hidden; margin:10px 0 4px; gap:2px; }
+    .bmi-scale div { flex:1; border-radius:999px; }
+
+    /* ── Button ── */
+    .btn-primary-custom {
+      background: var(--primary); color:#fff; border:none; border-radius:11px;
+      padding:12px; font-size:.95rem; font-weight:600; width:100%; cursor:pointer;
+      transition:.2s; letter-spacing:.02em;
+    }
+    .btn-primary-custom:hover { background:var(--primary-d); transform:translateY(-1px); box-shadow:0 4px 12px rgba(90,107,92,.3); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="/">🌿 AI 健康管理</a>
+  <div class="nav-links">
+    <a href="/step1" class="nav-btn active">📋 建立檔案</a>
+    <a href="/dashboard" class="nav-btn">📊 儀表板</a>
+  </div>
+</nav>
+
+<div class="container py-3">
+  <!-- Step bar -->
+  <div class="step-bar">
+    <div class="step-item">
+      <div class="step-circle current">1</div>
+      <div class="step-label">基本資料</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle pending">2</div>
+      <div class="step-label">健康計畫</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle pending">3</div>
+      <div class="step-label">飲食記錄</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item">
+      <div class="step-circle pending">4</div>
+      <div class="step-label">儀表板</div>
+    </div>
+  </div>
+
+  <div class="main-card mt-3">
+    <div class="card-title">Step 1 — 基本資料輸入</div>
+    <div class="card-sub">輸入您的身體數據，系統將自動計算 BMI</div>
+
+    <form method="post">
+      <!-- Gender -->
+      <div class="mb-3">
+        <div class="form-label">性別</div>
+        <div class="radio-group">
+          <div class="radio-pill">
+            <input type="radio" name="gender" id="male" value="male" checked>
+            <label for="male">♂ 男性</label>
+          </div>
+          <div class="radio-pill">
+            <input type="radio" name="gender" id="female" value="female">
+            <label for="female">♀ 女性</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Age -->
+      <div class="mb-3">
+        <label class="form-label" for="age">年齡</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="age" name="age" min="10" max="100" value="25" required>
+          <span class="input-group-text">歲</span>
+        </div>
+      </div>
+
+      <!-- Height -->
+      <div class="mb-3">
+        <label class="form-label" for="height">身高</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="height" name="height" min="100" max="250" step="0.1" value="170" required oninput="calcBMI()">
+          <span class="input-group-text">cm</span>
+        </div>
+      </div>
+
+      <!-- Weight -->
+      <div class="mb-3">
+        <label class="form-label" for="weight">體重</label>
+        <div class="input-group">
+          <input type="number" class="form-control" id="weight" name="weight" min="20" max="300" step="0.1" value="65" required oninput="calcBMI()">
+          <span class="input-group-text">kg</span>
+        </div>
+      </div>
+
+      <!-- BMI live -->
+      <div class="bmi-display mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">BMI 指數</div>
+            <div class="bmi-value" id="bmi-val" style="color:var(--primary)">—</div>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:2px" id="bmi-cat">輸入身高體重後自動計算</div>
+          </div>
+          <div style="font-size:2.2rem" id="bmi-emoji">⚖️</div>
+        </div>
+        <div class="bmi-scale">
+          <div style="background:#7a9db5;flex:1.5" title="過輕 <18.5"></div>
+          <div style="background:#7a9e87;flex:2.2" title="正常 18.5-24"></div>
+          <div style="background:#c9a96e;flex:1.2" title="過重 24-27"></div>
+          <div style="background:#b97070;flex:2.1" title="肥胖 >27"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)">
+          <span>過輕</span><span>18.5</span><span>正常</span><span>24</span><span>過重</span><span>27</span><span>肥胖</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary-custom">下一步：生成 AI 健康計畫 →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function calcBMI() {
+  const h = parseFloat(document.getElementById('height').value)/100;
+  const w = parseFloat(document.getElementById('weight').value);
+  if(!h||!w||h<=0) return;
+  const bmi = (w/(h*h)).toFixed(1);
+  const b   = parseFloat(bmi);
+  document.getElementById('bmi-val').textContent = bmi;
+  let cat, color, emoji;
+  if(b<18.5)      { cat='過輕'; color='#7a9db5'; emoji='🔵'; }
+  else if(b<24)   { cat='正常'; color='#7a9e87'; emoji='✅'; }
+  else if(b<27)   { cat='過重'; color='#c9a96e'; emoji='🟡'; }
+  else            { cat='肥胖'; color='#b97070'; emoji='🔴'; }
+  document.getElementById('bmi-cat').textContent  = cat;
+  document.getElementById('bmi-val').style.color  = color;
+  document.getElementById('bmi-emoji').textContent= emoji;
+}
+calcBMI();
+</script>
+</body>
+</html>

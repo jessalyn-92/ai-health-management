@@ -1,0 +1,22 @@
+# 機密設定（API key 等）
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# 執行時產生的資料庫（程式啟動會自動建立）
+*.db
+*.db-wal
+*.db-shm
+
+# 使用者上傳的圖片
+uploads/
+
+# 系統檔
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
